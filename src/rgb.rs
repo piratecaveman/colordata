@@ -17,8 +17,26 @@ impl Rgb {
     pub fn new() -> Rgb {
         Rgb::default()
     }
+    pub fn red(&self) -> u8 {
+        self.0
+    }
+    pub fn green(&self) -> u8 {
+        self.1
+    }
+    pub fn blue(&self) -> u8 {
+        self.2
+    }
+    pub fn set_red(&mut self, red: u8) {
+        self.0 = red;
+    }
+    pub fn set_green(&mut self, green: u8) {
+        self.1 = green;
+    }
+    pub fn set_blue(&mut self, blue: u8) {
+        self.2 = blue;
+    }
     pub fn to_hex(&self) -> String {
-        format!("#{:02x}{:02x}{:02x}", self.0, self.1, self.2)
+        format!("#{:02x}{:02x}{:02x}", self.red(), self.green(), self.blue())
     }
     pub fn from_hex<T: ToString>(color_hex: T) -> Rgb {
         let color_hex = color_hex.to_string();
@@ -39,7 +57,7 @@ impl Rgb {
 
 impl From<&Rgb> for String {
     fn from(color: &Rgb) -> String {
-        format!("{},{},{}", color.0, color.1, color.2)
+        format!("{},{},{}", color.red(), color.green(), color.blue())
     }
 }
 
@@ -52,9 +70,9 @@ mod rgb_tests {
     #[test]
     fn from_hex() {
         let red = super::Rgb::from_hex("#ff0000");
-        assert_eq!(red.0, 255);
-        assert_eq!(red.1, 0);
-        assert_eq!(red.2, 0);
+        assert_eq!(red.red(), 255);
+        assert_eq!(red.green(), 0);
+        assert_eq!(red.blue(), 0);
     }
     #[test]
     fn to_string() {

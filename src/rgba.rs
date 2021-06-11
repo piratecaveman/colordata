@@ -17,6 +17,30 @@ impl Rgba {
     pub fn new() -> Rgba {
         Rgba::default()
     }
+    pub fn red(&self) -> u8 {
+        self.0
+    }
+    pub fn green(&self) -> u8 {
+        self.1
+    }
+    pub fn blue(&self) -> u8 {
+        self.2
+    }
+    pub fn alpha(&self) -> f32 {
+        self.3
+    }
+    pub fn set_red(&mut self, red: u8) {
+        self.0 = red;
+    }
+    pub fn set_green(&mut self, green: u8) {
+        self.1 = green;
+    }
+    pub fn set_blue(&mut self, blue: u8) {
+        self.2 = blue;
+    }
+    pub fn set_alpha(&mut self, alpha: f32) {
+        self.3 = alpha.clamp(0.0, 1.0);
+    }
     pub fn to_hex(&self) -> String {
         format!(
             "#{:02x}{:02x}{:02x}{:02x}",

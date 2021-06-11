@@ -14,10 +14,50 @@ impl std::fmt::Display for Xrgba {
 }
 
 impl Xrgba {
+    pub fn red(&self) -> &str {
+        self.0.split('/').next().unwrap()
+    }
+    pub fn green(&self) -> &str {
+        self.0.split('/').nth(1).unwrap()
+    }
+    pub fn blue(&self) -> &str {
+        self.0.split('/').nth(2).unwrap()
+    }
+    pub fn set_red(&mut self, red: &str) {
+        let mut remaining = self.0.split('/');
+        let green = remaining.nth(1).unwrap();
+        let blue = remaining.nth(2).unwrap();
+        let alpha = remaining.nth(3).unwrap();
+        self.0 = format!("{}/{}/{}/{}", red, green, blue, alpha);
+    }
+    pub fn set_green(&mut self, green: &str) {
+        let mut remaining = self.0.split('/');
+        let red = remaining.next().unwrap();
+        let blue = remaining.nth(2).unwrap();
+        let alpha = remaining.nth(3).unwrap();
+        self.0 = format!("{}/{}/{}/{}", red, green, blue, alpha);
+    }
+    pub fn set_blue(&mut self, blue: &str) {
+        let mut remaining = self.0.split('/');
+        let red = remaining.next().unwrap();
+        let green = remaining.nth(1).unwrap();
+        let alpha = remaining.nth(3).unwrap();
+        self.0 = format!("{}/{}/{}/{}", red, green, blue, alpha);
+    }
+    pub fn set_alpha(&mut self, alpha: &str) {
+        let mut remaining = self.0.split('/');
+        let red = remaining.next().unwrap();
+        let green = remaining.nth(1).unwrap();
+        let blue = remaining.nth(2).unwrap();
+        self.0 = format!("{}/{}/{}/{}", red, green, blue, alpha);
+    }
     pub fn from_hex<T: ToString>(color_hex: T) -> Xrgba {
         let color_hex = color_hex.to_string();
         assert!(color_hex.starts_with('#'), "Hex color starts with a #");
-        assert!(color_hex.len().eq(&7usize), "Use form: #000000");
+        assert!(
+            color_hex.len().eq(&7usize) || color_hex.len().eq(&9usize),
+            "Use form: #000000 or #000000ff"
+        );
         assert!(
             color_hex
                 .chars()
@@ -27,11 +67,16 @@ impl Xrgba {
         let red = &color_hex[1..=2];
         let green = &color_hex[3..=4];
         let blue = &color_hex[5..=6];
+        let alpha = match &color_hex.len() {
+            9usize => &color_hex[7..=8],
+            _ => "ff",
+        };
         Xrgba(format!(
-            "{}/{}/{}/ff",
+            "{}/{}/{}/{}",
             red.to_ascii_lowercase(),
             green.to_ascii_lowercase(),
             blue.to_ascii_lowercase(),
+            alpha.to_ascii_lowercase(),
         ))
     }
     pub fn to_hex(&self) -> String {
