@@ -1,9 +1,9 @@
 [package]
 name = "colordata"
 version = "0.1.0"
-authors = ["wraith"]
+authors = ["Pirate Caveman <piratecaveman@protonmail.com>"]
 edition = "2018"
-
+repository = "https://github.com/piratecaveman/colordata"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
