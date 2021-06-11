@@ -88,6 +88,16 @@ impl Xrgba {
             splits.next().unwrap()
         )
     }
+    pub fn to_hex8(&self) -> String {
+        let mut splits = self.0.split('/');
+        format!(
+            "#{}{}{}{}",
+            splits.next().unwrap(),
+            splits.next().unwrap(),
+            splits.next().unwrap(),
+            splits.next().unwrap(),
+        )
+    }
 }
 
 impl From<&Xrgba> for String {
