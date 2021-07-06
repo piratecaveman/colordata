@@ -1,100 +1,157 @@
-pub fn check_hex(s: &str) -> usize {
-    match s.len() {
-        7 => {
-            if s.starts_with('#')
-                && s.chars()
-                    .all(|f| "#0123456789abcdef".contains(f.to_ascii_lowercase()))
-            {
-                7
-            } else {
-                0
-            }
+use std::error::Error;
+
+use once_cell::sync::Lazy;
+use regex::Regex;
+
+pub static HEXCOLOR_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r#"#[a-fA-F0-9]{8}|#[a-fA-F0-9]{6}|#[a-fA-F0-9]{4}|#[a-fA-F0-9]{3}"#).unwrap()
+});
+
+pub static XRGBA_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r#"[a-fA-F0-9]{2}/[a-fA-F0-9]{2}/[a-fA-F0-9]{2}/[a-fA-F0-9]{2}"#).unwrap()
+});
+
+pub static RGB_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r#"[rR][gG][bB]\(((?:\d{1,3}\.?)?\d{1,3}%?),\s*?((?:\d{1,3}\.?)?\d{1,3}%?),\s*?((?:\d{1,3}\.?)?\d{1,3}%?)\)"#).unwrap()
+});
+
+pub static RGBA_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(
+        r#"[rR][gG][bB][aA]\(((?:\d{1,3}\.?)?\d{1,3}%?),\s*?((?:\d{1,3}\.?)?\d{1,3}%?),\s*?((?:\d{1,3}\.?)?\d{1,3}%?),\s*?(\d{1}\.\d{1,})\)"#,
+    )
+    .unwrap()
+});
+
+pub fn check_hex(hex: &str) -> bool {
+    HEXCOLOR_REGEX.is_match(hex)
+}
+
+pub fn expand_hex(hex: &str) -> Result<String, Box<dyn Error>> {
+    match HEXCOLOR_REGEX.is_match(hex) {
+        true => {
+            let result = match hex.len() {
+                7 | 9 => hex.to_string(),
+                4 => {
+                    format!(
+                        "#{r}{r}{g}{g}{b}{b}",
+                        r = &hex[1..2],
+                        g = &hex[2..3],
+                        b = &hex[3..],
+                    )
+                }
+                5 => {
+                    format!(
+                        "#{r}{r}{g}{g}{b}{b}{a}{a}",
+                        r = &hex[1..2],
+                        g = &hex[2..3],
+                        b = &hex[3..4],
+                        a = &hex[4..],
+                    )
+                }
+                _ => unreachable!(),
+            };
+            Ok(result)
         }
-        9 => {
-            if s.starts_with('#')
-                && s.chars()
-                    .all(|f| "#0123456789abcdef".contains(f.to_ascii_lowercase()))
-            {
-                9
-            } else {
-                0
-            }
-        }
-        2 => {
-            if s.chars()
-                .all(|f| "0123456789abcdef".contains(f.to_ascii_lowercase()))
-            {
-                2
-            } else {
-                0
-            }
-        }
-        4 => {
-            if s.starts_with('#')
-                && s.chars()
-                    .all(|f| "#0123456789abcdef".contains(f.to_ascii_lowercase()))
-            {
-                4
-            } else {
-                0
-            }
-        }
-        5 => {
-            if s.starts_with('#')
-                && s.chars()
-                    .all(|f| "#0123456789abcdef".contains(f.to_ascii_lowercase()))
-            {
-                5
-            } else {
-                0
-            }
-        }
-        _ => 0,
+        false => Err("Invalid hex".into()),
     }
 }
 
-pub fn expand_color(s: &str) -> String {
-    let s_len = check_hex(s);
-    assert!(!s_len.eq(&2usize), "Hex: {} cannot be expanded", s);
-    match s_len {
-        4 => {
-            assert!(s.starts_with('#'), "Invalid hex: {}", s);
-            let mut s = s.strip_prefix('#').unwrap().chars();
-            format!(
-                "#{red}{red}{green}{green}{blue}{blue}",
-                red = s.next().unwrap(),
-                green = s.next().unwrap(),
-                blue = s.next().unwrap(),
-            )
+pub fn check_xrgba(xrgba: &str) -> bool {
+    XRGBA_REGEX.is_match(xrgba)
+}
+
+pub fn check_rgb(rgb: &str) -> bool {
+    match RGB_REGEX.is_match(rgb) {
+        true => {
+            let capture = RGB_REGEX.captures(rgb).unwrap();
+            let red = &capture[1];
+            let green = &capture[2];
+            let blue = &capture[3];
+
+            if [red, green, blue].iter().any(|f| f.ends_with('%')) {
+                let consistent = [red, green, blue].iter().all(|f| f.ends_with('%'));
+                if !consistent {
+                    return false;
+                };
+            };
+
+            macro_rules! check_this {
+                ($color:ident) => {
+                    match $color.ends_with('%') {
+                        true => {
+                            let value = $color.strip_suffix('%').unwrap();
+                            match value.parse::<f32>() {
+                                Ok(val) => (0.0f32..=100.0f32).contains(&val),
+                                Err(_) => return false,
+                            }
+                        }
+                        false => match $color.parse::<u8>() {
+                            Ok(_) => true,
+                            Err(_) => return false,
+                        },
+                    }
+                };
+            }
+            let red_ok = check_this!(red);
+            let green_ok = check_this!(green);
+            let blue_ok = check_this!(blue);
+            red_ok & green_ok & blue_ok
         }
-        5 => {
-            assert!(s.starts_with('#'), "Invalid hex: {}", s);
-            let mut s = s.strip_prefix('#').unwrap().chars();
-            format!(
-                "#{red}{red}{green}{green}{blue}{blue}{alpha}{alpha}",
-                red = s.next().unwrap(),
-                green = s.next().unwrap(),
-                blue = s.next().unwrap(),
-                alpha = s.next().unwrap(),
-            )
-        }
-        _ => s.to_string(),
+        false => false,
     }
 }
 
-pub fn check_xrgba(s: &str) -> bool {
-    if !s.matches('/').count().eq(&3usize) {
-        return false;
-    };
-    let mut new_s = s.split('/');
-    if !&new_s.clone().count().eq(&4usize) {
-        return false;
-    };
-    new_s.all(|f: &str| {
-        f.len().eq(&2usize)
-            && f.chars()
-                .all(|x| "0123456789abcdef".contains(x.to_ascii_lowercase()))
-    })
+pub fn check_rgba(rgba: &str) -> bool {
+    match RGBA_REGEX.is_match(rgba) {
+        true => {
+            let capture = RGBA_REGEX.captures(rgba).unwrap();
+            let red = &capture[1];
+            let green = &capture[2];
+            let blue = &capture[3];
+            let alpha = &capture[4];
+
+            if [red, green, blue].iter().any(|f| f.ends_with('%')) {
+                let consistent = [red, green, blue].iter().all(|f| f.ends_with('%'));
+                if !consistent {
+                    return false;
+                };
+            };
+
+            macro_rules! check_this {
+                ($color:ident) => {
+                    match $color.ends_with('%') {
+                        true => {
+                            let value = $color.strip_suffix('%').unwrap();
+                            match value.parse::<f32>() {
+                                Ok(val) => (0.0f32..=100.0f32).contains(&val),
+                                Err(_) => return false,
+                            }
+                        }
+                        false => match $color.parse::<u8>() {
+                            Ok(_) => true,
+                            Err(_) => return false,
+                        },
+                    }
+                };
+            }
+
+            fn check_alpha(s: &str) -> bool {
+                let value = s.parse::<f32>();
+                match value {
+                    Ok(val) => (0.0f32..=1.0f32).contains(&val),
+                    Err(_) => false,
+                }
+            }
+
+            let red_ok = check_this!(red);
+            let green_ok = check_this!(green);
+            let blue_ok = check_this!(blue);
+            let alpha_ok = check_alpha(alpha);
+
+            red_ok && blue_ok && green_ok && alpha_ok
+        }
+        false => false,
+    }
 }
 
 /// up to three digit accuracy
@@ -111,162 +168,140 @@ pub fn u8_to_f32_clamped(num: u8) -> f32 {
     number.clamp(0.0f32, 1.0f32)
 }
 
+pub fn percentage_to_u8(percentage: f32) -> u8 {
+    let percentage = percentage.clamp(0.0f32, 100.0f32);
+    let mut num = (percentage * 255.0f32) / 100.0f32;
+    num = (num * 1000.0f32).round() / 1000.0f32;
+    num = num.clamp(0.0f32, 255.0f32);
+    num as u8
+}
+
+pub fn clamped_f32_to_u8(num: f32) -> u8 {
+    let mut num = num.clamp(0.0f32, 1.0f32);
+    num *= 255.0f32;
+    // num = (num * 1000.0f32).round() / 1000.0f32;
+    num = num.clamp(0.0f32, 255.0f32);
+    num as u8
+}
+
 pub fn hex_to_tuple(hex: &str) -> (u8, u8, u8) {
-    let hex_len = check_hex(hex);
-    assert!(matches!(hex_len, 7 | 9 | 4 | 5), "Invalid Hex: {}", hex);
-    let hex = expand_color(hex);
-    let red = u8::from_str_radix(&hex[1..=2], 16).unwrap();
-    let green = u8::from_str_radix(&hex[3..=4], 16).unwrap();
-    let blue = u8::from_str_radix(&hex[5..=6], 16).unwrap();
+    assert!(check_hex(hex), "Invalid hex: {}", hex);
+    let hex_new = expand_hex(hex).unwrap();
+    let red = u8::from_str_radix(&hex_new[1..=2], 16).unwrap();
+    let green = u8::from_str_radix(&hex_new[3..=4], 16).unwrap();
+    let blue = u8::from_str_radix(&hex_new[5..=6], 16).unwrap();
     (red, green, blue)
 }
 
 pub fn hex_to_tuple_alpha(hex: &str) -> (u8, u8, u8, u8) {
-    let hex_len = check_hex(hex);
-    assert!(matches!(hex_len, 7 | 9 | 4 | 5), "Invalid Hex: {}", hex);
-    let hex = expand_color(hex);
-    let red = u8::from_str_radix(&hex[1..=2], 16).unwrap();
-    let green = u8::from_str_radix(&hex[3..=4], 16).unwrap();
-    let blue = u8::from_str_radix(&hex[5..=6], 16).unwrap();
-    let alpha = match hex_len {
-        7 => 255,
-        9 => u8::from_str_radix(&hex[7..=8], 16).unwrap(),
+    assert!(check_hex(hex), "Invalid hex: {}", hex);
+    let hex_new = expand_hex(hex).unwrap();
+    let red = u8::from_str_radix(&hex_new[1..=2], 16).unwrap();
+    let green = u8::from_str_radix(&hex_new[3..=4], 16).unwrap();
+    let blue = u8::from_str_radix(&hex_new[5..=6], 16).unwrap();
+    let alpha = match hex_new.len() {
+        7 => 255u8,
+        9 => u8::from_str_radix(&hex_new[7..=8], 16).unwrap(),
         _ => unreachable!(),
     };
     (red, green, blue, alpha)
 }
 
+pub fn rgb_to_tuple(rgb: &str) -> (u8, u8, u8) {
+    assert!(check_rgb(rgb), "Invalid rgb: {}", rgb);
+    let capture = RGB_REGEX.captures(rgb).unwrap();
+    let red = match &capture[1].ends_with('%') {
+        true => {
+            let percentage = (&capture)[1]
+                .strip_suffix('%')
+                .unwrap()
+                .parse::<f32>()
+                .unwrap();
+            percentage_to_u8(percentage)
+        }
+        false => (&capture[1]).parse::<u8>().unwrap(),
+    };
+    let green = match &capture[2].ends_with('%') {
+        true => {
+            let percentage = (&capture)[2]
+                .strip_suffix('%')
+                .unwrap()
+                .parse::<f32>()
+                .unwrap();
+            percentage_to_u8(percentage)
+        }
+        false => (&capture[2]).parse::<u8>().unwrap(),
+    };
+    let blue = match &capture[3].ends_with('%') {
+        true => {
+            let percentage = (&capture)[3]
+                .strip_suffix('%')
+                .unwrap()
+                .parse::<f32>()
+                .unwrap();
+            percentage_to_u8(percentage)
+        }
+        false => (&capture[3]).parse::<u8>().unwrap(),
+    };
+    (red, green, blue)
+}
+
+pub fn rgba_to_tuple_alpha(rgba: &str) -> (u8, u8, u8, u8) {
+    assert!(check_rgba(rgba), "Invalid rgba: {}", rgba);
+    let capture = RGBA_REGEX.captures(rgba).unwrap();
+    let red = match &capture[1].ends_with('%') {
+        true => {
+            let percentage = (&capture)[1]
+                .strip_suffix('%')
+                .unwrap()
+                .parse::<f32>()
+                .unwrap();
+            percentage_to_u8(percentage)
+        }
+        false => (&capture[1]).parse::<u8>().unwrap(),
+    };
+    let green = match &capture[2].ends_with('%') {
+        true => {
+            let percentage = (&capture)[2]
+                .strip_suffix('%')
+                .unwrap()
+                .parse::<f32>()
+                .unwrap();
+            percentage_to_u8(percentage)
+        }
+        false => (&capture[2]).parse::<u8>().unwrap(),
+    };
+    let blue = match &capture[3].ends_with('%') {
+        true => {
+            let percentage = (&capture)[3]
+                .strip_suffix('%')
+                .unwrap()
+                .parse::<f32>()
+                .unwrap();
+            percentage_to_u8(percentage)
+        }
+        false => (&capture[3]).parse::<u8>().unwrap(),
+    };
+    let alpha = (&capture)[4].parse::<f32>().unwrap();
+    let alpha = clamped_f32_to_u8(alpha);
+    (red, green, blue, alpha)
+}
+
 pub fn xrgba_to_tuple(xrgba: &str) -> (u8, u8, u8) {
-    assert!(check_xrgba(xrgba), "Invalid xrgba string: {}", xrgba);
+    assert!(check_xrgba(xrgba), "Invalid xrgba: {}", xrgba);
     let mut chunks = xrgba.split('/');
-    let red = u8::from_str_radix(chunks.next().unwrap(), 16).unwrap();
-    let green = u8::from_str_radix(chunks.next().unwrap(), 16).unwrap();
-    let blue = u8::from_str_radix(chunks.next().unwrap(), 16).unwrap();
+    let red = u8::from_str_radix(&chunks.next().unwrap(), 16).unwrap();
+    let green = u8::from_str_radix(&chunks.next().unwrap(), 16).unwrap();
+    let blue = u8::from_str_radix(&chunks.next().unwrap(), 16).unwrap();
     (red, green, blue)
 }
 
 pub fn xrgba_to_tuple_alpha(xrgba: &str) -> (u8, u8, u8, u8) {
-    assert!(check_xrgba(xrgba), "Invalid xrgba string: {}", xrgba);
+    assert!(check_xrgba(xrgba), "Invalid xrgba: {}", xrgba);
     let mut chunks = xrgba.split('/');
-    let red = u8::from_str_radix(chunks.next().unwrap(), 16).unwrap();
-    let green = u8::from_str_radix(chunks.next().unwrap(), 16).unwrap();
-    let blue = u8::from_str_radix(chunks.next().unwrap(), 16).unwrap();
-    let alpha = u8::from_str_radix(chunks.next().unwrap(), 16).unwrap();
+    let red = u8::from_str_radix(&chunks.next().unwrap(), 16).unwrap();
+    let green = u8::from_str_radix(&chunks.next().unwrap(), 16).unwrap();
+    let blue = u8::from_str_radix(&chunks.next().unwrap(), 16).unwrap();
+    let alpha = u8::from_str_radix(&chunks.next().unwrap(), 16).unwrap();
     (red, green, blue, alpha)
-}
-
-pub fn check_rgb(s: &str) -> bool {
-    let s_lower = s.to_ascii_lowercase();
-    let edges = s_lower.starts_with(r#"rgb("#) && s_lower.ends_with(')');
-    if !edges {
-        return edges;
-    };
-    let core = s_lower
-        .strip_prefix(r#"rgb("#)
-        .unwrap()
-        .strip_suffix(')')
-        .unwrap();
-    let core = core.replace(" ", "");
-    let mut core = core.split(',');
-    if !core.clone().count().eq(&3usize) {
-        return false;
-    };
-    core.all(|f| f.parse::<u8>().is_ok())
-}
-
-pub fn rgb_to_tuple(s: &str) -> (u8, u8, u8) {
-    assert!(check_rgb(s), "Invalid rgb: {}", s);
-    let s = s
-        .to_ascii_lowercase()
-        .strip_prefix(r#"rgb("#)
-        .unwrap()
-        .strip_suffix(')')
-        .unwrap()
-        .replace(" ", "");
-    let mut s = s.split(',');
-    let red = s.next().unwrap().parse::<u8>().unwrap();
-    let green = s.next().unwrap().parse::<u8>().unwrap();
-    let blue = s.next().unwrap().parse::<u8>().unwrap();
-    (red, green, blue)
-}
-
-pub fn rgb_to_tuple_alpha(s: &str) -> (u8, u8, u8, u8) {
-    assert!(check_rgb(s), "Invalid rgb: {}", s);
-    let s = s
-        .to_ascii_lowercase()
-        .strip_prefix(r#"rgb("#)
-        .unwrap()
-        .strip_suffix(')')
-        .unwrap()
-        .replace(" ", "");
-    let mut s = s.split(',');
-    let red = s.next().unwrap().parse::<u8>().unwrap();
-    let green = s.next().unwrap().parse::<u8>().unwrap();
-    let blue = s.next().unwrap().parse::<u8>().unwrap();
-    (red, green, blue, 255)
-}
-
-pub fn check_rgba(s: &str) -> bool {
-    let s_lower = s.to_ascii_lowercase();
-    let edges = s_lower.starts_with(r#"rgba("#) && s_lower.ends_with(')');
-    if !edges {
-        return false;
-    };
-    let core = s_lower
-        .strip_prefix(r#"rgba("#)
-        .unwrap()
-        .strip_suffix(')')
-        .unwrap();
-    let core = core.replace(" ", "");
-    let mut center = core.split(',').take(3);
-    let center_is_ok = center.all(|f| f.parse::<u8>().is_ok());
-    if !center_is_ok {
-        return false;
-    };
-    let alpha = core.split(',').nth(3).unwrap().parse::<f32>();
-    if alpha.is_ok() {
-        let unw = match alpha {
-            Ok(it) => it,
-            _ => unreachable!(),
-        };
-        (0.0f32..=1.0f32).contains(&unw)
-    } else {
-        false
-    }
-}
-
-pub fn rgba_to_tuple(s: &str) -> (u8, u8, u8) {
-    assert!(check_rgba(s), "Invalid rgba: {}", s);
-    let s = s
-        .to_ascii_lowercase()
-        .strip_prefix(r#"rgba("#)
-        .unwrap()
-        .strip_suffix(')')
-        .unwrap()
-        .replace(" ", "");
-    let mut s = s.split(',');
-    let red = s.next().unwrap().parse::<u8>().unwrap();
-    let green = s.next().unwrap().parse::<u8>().unwrap();
-    let blue = s.next().unwrap().parse::<u8>().unwrap();
-    (red, green, blue)
-}
-
-pub fn rgba_to_tuple_alpha(s: &str) -> (u8, u8, u8, u8) {
-    assert!(check_rgba(s), "Invalid rgba: {}", s);
-    let s = s
-        .to_ascii_lowercase()
-        .strip_prefix(r#"rgba("#)
-        .unwrap()
-        .strip_suffix(')')
-        .unwrap()
-        .replace(" ", "");
-    let mut s = s.split(',');
-    let red = s.next().unwrap().parse::<u8>().unwrap();
-    let green = s.next().unwrap().parse::<u8>().unwrap();
-    let blue = s.next().unwrap().parse::<u8>().unwrap();
-    let mut alpha = s.next().unwrap().parse::<f32>().unwrap();
-    alpha *= 255.0f32;
-    alpha = alpha.round();
-    alpha = alpha.clamp(0.0f32, 255.0f32);
-    (red, green, blue, alpha as u8)
 }

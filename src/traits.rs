@@ -101,6 +101,15 @@ where
         let tuple = self.to_tuple();
         format!("rgb({},{},{})", tuple.0, tuple.1, tuple.2)
     }
+    fn rgb_percentage(&self) -> String {
+        let tuple = self.to_tuple();
+        format!(
+            "rgb({}%,{}%,{}%)",
+            utils::u8_to_percentage(tuple.0),
+            utils::u8_to_percentage(tuple.1),
+            utils::u8_to_percentage(tuple.2),
+        )
+    }
     fn rgba(&self) -> String {
         let tuple = self.to_tuple_alpha();
         format!(
@@ -109,6 +118,16 @@ where
             tuple.1,
             tuple.2,
             utils::u8_to_f32_clamped(tuple.3)
+        )
+    }
+    fn rgba_percentage(&self) -> String {
+        let tuple = self.to_tuple_alpha();
+        format!(
+            "rgba({}%,{}%,{}%,{})",
+            utils::u8_to_percentage(tuple.0),
+            utils::u8_to_percentage(tuple.1),
+            utils::u8_to_percentage(tuple.2),
+            utils::u8_to_f32_clamped(tuple.3),
         )
     }
     fn xrgba(&self) -> String {

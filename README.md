@@ -9,8 +9,8 @@ Simple color conversion and parsing utility in rust for educational purposes.
 - [x] Parse Rgb color
 - [x] Parse Rgba color
 - [x] Parse Xrgba color
-- [ ] Parse Rgb color with percentage
-- [ ] Parse Rgba color with percentage
+- [x] Parse Rgb color with percentage
+- [x] Parse Rgba color with percentage
 - [ ] Parse HSL color
 - [ ] Parse HSV color
 - [x] Convert color to Hex
