@@ -97,8 +97,10 @@ mod tests {
         assert_eq!(green_blue.hex8(), "#bcfff5ff");
         assert_eq!(green_blue.rgb(), "rgb(188,255,245)");
         assert_eq!(green_blue.rgb_percentage(), "rgb(73.725%,100%,96.078%)");
+        assert_eq!(green_blue.rgb_percentage_rounded(), "rgb(74%,100%,96%)");
         assert_eq!(green_blue.rgba(), "rgba(188,255,245,1)");
         assert_eq!(green_blue.rgba_percentage(), "rgba(73.725%,100%,96.078%,1)");
+        assert_eq!(green_blue.rgba_percentage_rounded(), "rgba(74%,100%,96%,1)");
         assert_eq!(green_blue.xrgba(), "bc/ff/f5/ff");
 
         let mint = Color {
@@ -111,11 +113,13 @@ mod tests {
         assert_eq!(mint.hex8(), "#abf78880");
         assert_eq!(mint.rgb(), "rgb(171,247,136)");
         assert_eq!(mint.rgb_percentage(), "rgb(67.059%,96.863%,53.333%)");
+        assert_eq!(mint.rgb_percentage_rounded(), "rgb(67%,97%,53%)");
         assert_eq!(mint.rgba(), "rgba(171,247,136,0.502)");
         assert_eq!(
             mint.rgba_percentage(),
             "rgba(67.059%,96.863%,53.333%,0.502)"
         );
+        assert_eq!(mint.rgba_percentage_rounded(), "rgba(67%,97%,53%,0.502)");
         assert_eq!(mint.xrgba(), "ab/f7/88/80");
     }
     #[test]

@@ -161,6 +161,13 @@ pub fn u8_to_percentage(num: u8) -> f32 {
     percentage.clamp(0.0f32, 100.0f32)
 }
 
+pub fn u8_to_percentage_rounded(num: u8) -> u8 {
+    let mut percentage = (num as f32 * 100.0f32) / 255.0f32;
+    percentage = percentage.round();
+    let percentage = percentage as u8;
+    percentage.clamp(0u8, 100u8)
+}
+
 /// up to three digit accuracy
 pub fn u8_to_f32_clamped(num: u8) -> f32 {
     let mut number = num as f32 / 255.0f32;
