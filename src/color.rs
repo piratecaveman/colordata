@@ -114,7 +114,9 @@ mod tests {
         assert_eq!(mint.rgb(), "rgb(171,247,136)");
         assert_eq!(mint.rgb_percentage(), "rgb(67.059%,96.863%,53.333%)");
         assert_eq!(mint.rgb_percentage_rounded(), "rgb(67%,97%,53%)");
+        assert_eq!(mint.rgb_stripped(), "171,247,136");
         assert_eq!(mint.rgba(), "rgba(171,247,136,0.502)");
+        assert_eq!(mint.rgba_stripped(), "171,247,136,0.502");
         assert_eq!(
             mint.rgba_percentage(),
             "rgba(67.059%,96.863%,53.333%,0.502)"

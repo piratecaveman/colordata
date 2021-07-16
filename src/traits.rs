@@ -135,7 +135,13 @@ where
     }
     fn rgba_stripped(&self) -> String {
         let tuple = self.to_tuple_alpha();
-        format!("{},{},{},{}", tuple.0, tuple.1, tuple.2, tuple.3)
+        format!(
+            "{},{},{},{}",
+            tuple.0,
+            tuple.1,
+            tuple.2,
+            utils::u8_to_f32_clamped(tuple.3)
+        )
     }
     fn rgba_percentage(&self) -> String {
         let tuple = self.to_tuple_alpha();
