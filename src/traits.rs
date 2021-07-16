@@ -101,6 +101,10 @@ where
         let tuple = self.to_tuple();
         format!("rgb({},{},{})", tuple.0, tuple.1, tuple.2)
     }
+    fn rgb_stripped(&self) -> String {
+        let tuple = self.to_tuple();
+        format!("{},{},{}", tuple.0, tuple.1, tuple.2)
+    }
     fn rgb_percentage(&self) -> String {
         let tuple = self.to_tuple();
         format!(
@@ -128,6 +132,10 @@ where
             tuple.2,
             utils::u8_to_f32_clamped(tuple.3)
         )
+    }
+    fn rgba_stripped(&self) -> String {
+        let tuple = self.to_tuple_alpha();
+        format!("{},{},{},{}", tuple.0, tuple.1, tuple.2, tuple.3)
     }
     fn rgba_percentage(&self) -> String {
         let tuple = self.to_tuple_alpha();
