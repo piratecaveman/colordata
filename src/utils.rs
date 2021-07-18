@@ -22,6 +22,26 @@ pub static RGBA_REGEX: Lazy<Regex> = Lazy::new(|| {
     .unwrap()
 });
 
+/// maps a number to the type of color
+/// 0 - hex
+/// 1 - rgb
+/// 2 - rgba
+/// 3 - xrgba
+/// 9 - unsupported
+pub fn classify(s: &str) -> u8 {
+    if HEXCOLOR_REGEX.is_match(s) {
+        0u8
+    } else if RGB_REGEX.is_match(s) {
+        1u8
+    } else if RGBA_REGEX.is_match(s) {
+        2u8
+    } else if XRGBA_REGEX.is_match(s) {
+        3u8
+    } else {
+        9u8
+    }
+}
+
 pub fn check_hex(hex: &str) -> bool {
     HEXCOLOR_REGEX.is_match(hex)
 }

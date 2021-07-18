@@ -5,6 +5,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::traits::*;
+use crate::utils;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Color {
@@ -65,6 +66,31 @@ impl Default for Color {
 impl Display for Color {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.hex())
+    }
+}
+
+impl From<&str> for Color {
+    fn from(s: &str) -> Self {
+        let color_type = utils::classify(s);
+        match color_type {
+            0 => Color::from_hex8(s),
+            1 => Color::from_rgb(s),
+            2 => Color::from_rgba(s),
+            3 => Color::from_xrgba(s),
+            _ => panic!("Unrecognized color format: {}", s),
+        }
+    }
+}
+
+impl From<&String> for Color {
+    fn from(s: &String) -> Self {
+        Color::from(s.as_str())
+    }
+}
+
+impl From<String> for Color {
+    fn from(s: String) -> Self {
+        Color::from(s.as_str())
     }
 }
 
@@ -144,5 +170,36 @@ mod tests {
         assert!(orange.red_hex().eq("ff"));
         assert!((1.0 - orange.red_f32()).abs() < f32::EPSILON);
         assert!((0.686 - orange.alpha_f32()).abs() < f32::EPSILON);
+    }
+    #[test]
+    fn from_string_with_type_detection() {
+        use super::*;
+        let yellow = "#ffcc11";
+        let color = Color::from(yellow);
+        assert_eq!(color.red, 255);
+        assert_eq!(color.green, 204);
+        assert_eq!(color.blue, 17);
+        assert_eq!(color.alpha, 255);
+
+        let yellow = "rgb(255, 204, 17)";
+        let color = Color::from(yellow);
+        assert_eq!(color.red, 255);
+        assert_eq!(color.green, 204);
+        assert_eq!(color.blue, 17);
+        assert_eq!(color.alpha, 255);
+
+        let yellow = "rgba(255, 204, 17, 1.0)";
+        let color = Color::from(yellow);
+        assert_eq!(color.red, 255);
+        assert_eq!(color.green, 204);
+        assert_eq!(color.blue, 17);
+        assert_eq!(color.alpha, 255);
+
+        let yellow = "ff/cc/11/ff";
+        let color = Color::from(yellow);
+        assert_eq!(color.red, 255);
+        assert_eq!(color.green, 204);
+        assert_eq!(color.blue, 17);
+        assert_eq!(color.alpha, 255);
     }
 }
