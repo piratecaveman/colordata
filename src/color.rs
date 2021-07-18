@@ -1,6 +1,12 @@
+use std::fmt::Display;
+use std::fmt::Formatter;
+
+use serde::Deserialize;
+use serde::Serialize;
+
 use crate::traits::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Color {
     pub red: u8,
     pub green: u8,
@@ -53,6 +59,12 @@ impl Default for Color {
             blue: 0,
             alpha: 255,
         }
+    }
+}
+
+impl Display for Color {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.hex())
     }
 }
 
