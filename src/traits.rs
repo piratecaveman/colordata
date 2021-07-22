@@ -53,14 +53,29 @@ where
     fn red_percentage(&self) -> f32 {
         utils::u8_to_percentage(self.to_tuple().0)
     }
+    fn red_percentage_rounded(&self) -> u8 {
+        utils::u8_to_percentage_rounded(self.to_tuple().0)
+    }
+
     fn green_percentage(&self) -> f32 {
         utils::u8_to_percentage(self.to_tuple().1)
     }
+    fn green_percentage_rounded(&self) -> u8 {
+        utils::u8_to_percentage_rounded(self.to_tuple().1)
+    }
+
     fn blue_percentage(&self) -> f32 {
         utils::u8_to_percentage(self.to_tuple().2)
     }
+    fn blue_percentage_rounded(&self) -> u8 {
+        utils::u8_to_percentage_rounded(self.to_tuple().2)
+    }
+
     fn alpha_percentage(&self) -> f32 {
         utils::u8_to_percentage(self.to_tuple_alpha().3)
+    }
+    fn alpha_percentage_rounded(&self) -> u8 {
+        utils::u8_to_percentage_rounded(self.to_tuple_alpha().3)
     }
 }
 
@@ -90,10 +105,21 @@ where
         let tuple = self.to_tuple();
         format!("#{:02x}{:02x}{:02x}", tuple.0, tuple.1, tuple.2)
     }
+    fn hex_stripped(&self) -> String {
+        let tuple = self.to_tuple();
+        format!("{:02x}{:02x}{:02x}", tuple.0, tuple.1, tuple.2)
+    }
     fn hex8(&self) -> String {
         let tuple = self.to_tuple_alpha();
         format!(
             "#{:02x}{:02x}{:02x}{:02x}",
+            tuple.0, tuple.1, tuple.2, tuple.3
+        )
+    }
+    fn hex8_stripped(&self) -> String {
+        let tuple = self.to_tuple_alpha();
+        format!(
+            "{:02x}{:02x}{:02x}{:02x}",
             tuple.0, tuple.1, tuple.2, tuple.3
         )
     }
